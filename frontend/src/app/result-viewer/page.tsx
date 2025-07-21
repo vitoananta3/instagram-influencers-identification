@@ -704,7 +704,7 @@ export default function ResultViewer() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Post ID: {selectedPost.result.post_id}</span>
                     <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                      Rank #{selectedPost.rank + 1}
+                      Rank #{selectedPost.rank !== null && selectedPost.rank !== undefined ? selectedPost.rank + 1 : 'N/A'}
                     </span>
                   </div>
 
