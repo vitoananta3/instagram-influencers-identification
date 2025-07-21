@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface ResultFile {
   filename: string;
@@ -48,9 +49,23 @@ interface Pagination {
   has_previous: boolean;
 }
 
+// Define research categories and their URLs
+const RESEARCH_CATEGORIES = [
+  { name: 'beauty', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/beauty-093.csv' },
+  { name: 'family', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/family-093.csv' },
+  { name: 'fashion', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/fashion-093.csv' },
+  { name: 'fitness', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/fitness-093.csv' },
+  { name: 'food', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/food-093.csv' },
+  { name: 'interior', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/interior-093.csv' },
+  { name: 'pet', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/pet-093.csv' },
+  { name: 'travel', url: 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public/results/travel-093.csv' },
+];
+
 export default function ResultViewer() {
+  const [activeTab, setActiveTab] = useState<'local' | 'research'>('local');
   const [files, setFiles] = useState<ResultFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [results, setResults] = useState<ResultRow[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,15 +74,17 @@ export default function ResultViewer() {
   const [postInfos, setPostInfos] = useState<PostInfo[]>([]);
   const [postMetadata, setPostMetadata] = useState<Record<string, PostMetadata>>({});
   const [loadingPosts, setLoadingPosts] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<{result: ResultRow, postInfo: PostInfo | undefined, metadata: PostMetadata | undefined, currentImageIndex?: number} | null>(null);
+  const [selectedPost, setSelectedPost] = useState<{result: ResultRow, postInfo: PostInfo | undefined, metadata: PostMetadata | undefined, currentImageIndex?: number, rank?: number | null} | null>(null);
 
   const SUPABASE_BASE_URL = 'https://sqsfksneykcyhltfrhnr.supabase.co/storage/v1/object/public';
   const POST_INFO_URL = `${SUPABASE_BASE_URL}/posts/post_34000_sampled_clean_info.txt`;
 
-  // Fetch result files
+  // Fetch result files for local tab
   useEffect(() => {
-    fetchResultFiles();
-  }, []);
+    if (activeTab === 'local') {
+      fetchResultFiles();
+    }
+  }, [activeTab]);
 
   // Fetch post info when results change
   useEffect(() => {
@@ -102,6 +119,74 @@ export default function ResultViewer() {
       setCurrentPage(page);
     } catch (err) {
       setError('Failed to load results');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchResearchResults = async (categoryUrl: string, page: number = 1) => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(categoryUrl);
+      if (!response.ok) throw new Error('Failed to fetch research results');
+      const csvText = await response.text();
+      
+      // Parse CSV data
+      const lines = csvText.split('\n');
+      const headers = lines[0].split(',');
+      
+      // Process only the rows for the current page (simple client-side pagination)
+      const itemsPerPage = 10;
+      const startIndex = (page - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      
+      const allResults: ResultRow[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        
+        const values = lines[i].split(',');
+        const row: ResultRow = { post_id: '', username: '' };
+        
+        headers.forEach((header, index) => {
+          const trimmedHeader = header.trim();
+          if (values[index]) {
+            row[trimmedHeader] = values[index].trim();
+            
+            // Ensure post_id and username are set
+            if (trimmedHeader === 'post_id') row.post_id = values[index].trim();
+            if (trimmedHeader === 'username') row.username = values[index].trim();
+          }
+        });
+        
+        allResults.push(row);
+      }
+      
+      // Sort by final_direct_score if available
+      allResults.sort((a, b) => {
+        const scoreA = parseFloat(a.final_direct_score as string) || 0;
+        const scoreB = parseFloat(b.final_direct_score as string) || 0;
+        return scoreB - scoreA;
+      });
+      
+      // Create pagination info
+      const paginatedResults = allResults.slice(startIndex, endIndex);
+      const totalItems = allResults.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      
+      setResults(paginatedResults);
+      setPagination({
+        current_page: page,
+        total_pages: totalPages,
+        total_items: totalItems,
+        items_per_page: itemsPerPage,
+        has_next: page < totalPages,
+        has_previous: page > 1
+      });
+      setCurrentPage(page);
+    } catch (err) {
+      setError('Failed to load research results');
       console.error(err);
     } finally {
       setLoading(false);
@@ -195,13 +280,29 @@ export default function ResultViewer() {
 
   const handleFileSelect = (filename: string) => {
     setSelectedFile(filename);
+    setSelectedCategory(''); // Clear selected category when selecting a file
     setCurrentPage(1);
     fetchFileResults(filename, 1);
   };
+  
+  const handleCategorySelect = (category: string) => {
+    const selectedCategoryObj = RESEARCH_CATEGORIES.find(c => c.name === category);
+    if (selectedCategoryObj) {
+      setSelectedCategory(category);
+      setSelectedFile(''); // Clear selected file when selecting a category
+      setCurrentPage(1);
+      fetchResearchResults(selectedCategoryObj.url, 1);
+    }
+  };
 
   const handlePageChange = (page: number) => {
-    if (selectedFile) {
+    if (activeTab === 'local' && selectedFile) {
       fetchFileResults(selectedFile, page);
+    } else if (activeTab === 'research' && selectedCategory) {
+      const selectedCategoryObj = RESEARCH_CATEGORIES.find(c => c.name === selectedCategory);
+      if (selectedCategoryObj) {
+        fetchResearchResults(selectedCategoryObj.url, page);
+      }
     }
   };
 
@@ -242,24 +343,55 @@ export default function ResultViewer() {
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-6">Instagram Post Results Viewer</h1>
         
-        {/* File Selection */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select a result file:
-          </label>
-          <select
-            value={selectedFile}
-            onChange={(e) => handleFileSelect(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Choose a result file...</option>
-            {files.map((file) => (
-              <option key={file.filename} value={file.filename}>
-                {file.filename} ({(file.size / 1024).toFixed(1)} KB - Modified: {new Date(file.modified_time * 1000).toLocaleString()})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Tabs for Local and Research */}
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'local' | 'research')} className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="local">Local</TabsTrigger>
+            <TabsTrigger value="research">Research</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="local" className="mt-4">
+            {/* File Selection for Local Tab */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select a result file:
+              </label>
+              <select
+                value={selectedFile}
+                onChange={(e) => handleFileSelect(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Choose a result file...</option>
+                {files.map((file) => (
+                  <option key={file.filename} value={file.filename}>
+                    {file.filename} ({(file.size / 1024).toFixed(1)} KB - Modified: {new Date(file.modified_time * 1000).toLocaleString()})
+                  </option>
+                ))}
+              </select>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="research" className="mt-4">
+            {/* Category Selection for Research Tab */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select a category:
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategorySelect(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Choose a category...</option>
+                {RESEARCH_CATEGORIES.map((category) => (
+                  <option key={category.name} value={category.name}>
+                    {category.name.charAt(0).toUpperCase() + category.name.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
