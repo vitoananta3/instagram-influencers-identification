@@ -70,6 +70,11 @@ class JobStatus(BaseModel):
     result_file: Optional[str] = None
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    current_items: Optional[int] = None
+    total_items: Optional[int] = None
+    processing_speed: Optional[float] = None
+    elapsed_time: Optional[str] = None
+    estimated_time_remaining: Optional[str] = None
 
 class LogCapture:
     """Capture logs and send them via WebSocket"""

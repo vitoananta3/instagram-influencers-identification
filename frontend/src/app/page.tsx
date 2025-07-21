@@ -90,13 +90,13 @@ export default function Home() {
             }
           }
         } else {
-          console.error(`[Polling] Failed to fetch job status: ${response.status}`);
+          // console.error(`[Polling] Failed to fetch job status: ${response.status}`);
           startTransition(() => {
             setLogs(prev => [...prev, `[ERROR] Failed to fetch job status: ${response.status}`]);
           });
         }
       } catch (error) {
-        console.error(`[Polling] Error fetching job status:`, error);
+        // console.error(`[Polling] Error fetching job status:`, error);
         startTransition(() => {
           setLogs(prev => [...prev, `[ERROR] Status polling error: ${error}`]);
         });
@@ -185,7 +185,7 @@ export default function Home() {
       // Add a timeout to detect if connection never opens
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState === WebSocket.CONNECTING) {
-          console.error('[WebSocket] Connection timeout - still in CONNECTING state after 10 seconds');
+          // console.error('[WebSocket] Connection timeout - still in CONNECTING state after 10 seconds');
           startTransition(() => {
             setLogs(prev => [...prev, `[WARNING] WebSocket connection timeout`]);
           });
@@ -281,7 +281,7 @@ export default function Home() {
               });
             });
           } else if (data.type === 'error') {
-            console.error('[WebSocket] Error message:', data.message || data.data?.message);
+            // console.error('[WebSocket] Error message:', data.message || data.data?.message);
             startTransition(() => {
               setLogs(prev => [...prev, `[ERROR] ${data.message || data.data?.message || 'Unknown error'}`]);
             });
@@ -301,7 +301,7 @@ export default function Home() {
             console.log('[WebSocket] Unknown message type:', data.type);
           }
         } catch (error) {
-          console.error('[WebSocket] Error parsing message:', error);
+          // console.error('[WebSocket] Error parsing message:', error);
           console.log('[WebSocket] Raw message was:', event.data);
           startTransition(() => {
             setLogs(prev => [...prev, `[ERROR] Failed to parse WebSocket message: ${error}`]);
@@ -361,16 +361,16 @@ export default function Home() {
       };
 
       ws.onerror = (error) => {
-        console.error('[WebSocket] Connection error occurred');
-        console.error('[WebSocket] Error event:', error);
-        console.error('[WebSocket] WebSocket details:', {
-          readyState: ws.readyState,
-          readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState],
-          url: ws.url,
-          protocol: ws.protocol
-        });
-        console.error('[WebSocket] Error type:', error.type);
-        console.error('[WebSocket] Error target:', error.target);
+        // console.error('[WebSocket] Connection error occurred');
+        // console.error('[WebSocket] Error event:', error);
+        // console.error('[WebSocket] WebSocket details:', {
+        //   readyState: ws.readyState,
+        //   readyStateText: ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ws.readyState],
+        //   url: ws.url,
+        //   protocol: ws.protocol
+        // });
+        // console.error('[WebSocket] Error type:', error.type);
+        // console.error('[WebSocket] Error target:', error.target);
         startTransition(() => {
           setLogs(prev => [...prev, `[ERROR] WebSocket connection failed (readyState: ${ws.readyState})`]);
         });
@@ -379,7 +379,7 @@ export default function Home() {
       wsRef.current = ws;
 
     } catch (wsCreationError) {
-      console.error('[WebSocket] Failed to create WebSocket object:', wsCreationError);
+      // console.error('[WebSocket] Failed to create WebSocket object:', wsCreationError);
       const errorMessage = wsCreationError instanceof Error ? wsCreationError.message : 'Unknown error';
       startTransition(() => {
         setLogs(prev => [...prev, `[ERROR] Failed to create WebSocket: ${errorMessage}`]);
@@ -432,7 +432,7 @@ export default function Home() {
             setLogs(prev => [...prev, `[INFO] Immediate readiness check: ready=${testData.ready}, status=${testData.status}`]);
           });
         } else {
-          console.error(`[TEST] Immediate readiness check failed: ${testResponse.status}`);
+          // console.error(`[TEST] Immediate readiness check failed: ${testResponse.status}`);
           startTransition(() => {
             setLogs(prev => [...prev, `[ERROR] Immediate readiness check failed: ${testResponse.status}`]);
           });
