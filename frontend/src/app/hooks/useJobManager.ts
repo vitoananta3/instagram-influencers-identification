@@ -15,6 +15,7 @@ interface Job {
   total_items?: number;
   processing_speed?: number;
   elapsed_time?: string;
+  error_message?: string;
 }
 
 export function useJobManager() {
