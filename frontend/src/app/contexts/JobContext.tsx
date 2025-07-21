@@ -19,7 +19,7 @@ interface Job {
 
 interface JobContextType {
   currentJob: Job | null;
-  setCurrentJob: (job: Job | null) => void;
+  setCurrentJob: (job: Job | null | ((prev: Job | null) => Job | null)) => void;
   isJobRunning: () => boolean;
 }
 

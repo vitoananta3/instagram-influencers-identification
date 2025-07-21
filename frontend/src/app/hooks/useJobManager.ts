@@ -30,10 +30,9 @@ export function useJobManager() {
   }, [setCurrentJob]);
 
   const updateJobState = useCallback((updater: (prev: Job | null) => Job | null) => {
-    // Use React's batching mechanism for state updates
-    const updatedJob = updater(currentJob);
-    setCurrentJob(updatedJob);
-  }, [setCurrentJob, currentJob]);
+    // Use React's functional state update pattern to ensure we have the latest state
+    setCurrentJob(updater);
+  }, [setCurrentJob]);
 
   const resetJob = useCallback(() => {
     // Clean up resources first
