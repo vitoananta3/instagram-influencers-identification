@@ -226,7 +226,9 @@ export default function ResultViewer() {
   };
 
   const openPostDetail = (result: ResultRow, postInfo: PostInfo | undefined, metadata: PostMetadata | undefined) => {
-    setSelectedPost({ result, postInfo, metadata, currentImageIndex: 0 });
+    // Calculate the rank number based on current page and index
+    const rankNumber = pagination ? ((pagination.current_page - 1) * pagination.items_per_page) + results.findIndex(r => r.post_id === result.post_id) : null;
+    setSelectedPost({ result, postInfo, metadata, currentImageIndex: 0, rank: rankNumber });
   };
 
   const closePostDetail = () => {
@@ -367,7 +369,7 @@ export default function ResultViewer() {
                           alt={`Post by ${postInfo.username}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+';
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+'
                           }}
                         />
                         {/* Rank Number */}
@@ -499,7 +501,7 @@ export default function ResultViewer() {
 
       {/* Post Detail Dialog */}
       <Dialog open={!!selectedPost} onOpenChange={(open) => !open && closePostDetail()}>
-        <DialogContent className="w-3/6 max-w-none sm:max-w-none max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-6/6 max-w-none sm:max-w-none max-h-[100vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Post Details</DialogTitle>
             <DialogDescription>
@@ -509,10 +511,11 @@ export default function ResultViewer() {
           
           {selectedPost && (
             <div className="space-y-6">
-              {/* Top Section - Image Gallery and Scores */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Image Gallery (2/3 width) */}
-                <div className="lg:col-span-2">
+              {/* Top Section - Image Gallery and Content */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left Column - Image Gallery (4/12) */}
+                <div className="lg:col-span-4 space-y-4">
+                  {/* Image Gallery */}
                   {selectedPost.postInfo && selectedPost.postInfo.image_files.length > 0 && (
                     <div className="space-y-3">
                       {/* Main Image Display */}
@@ -522,7 +525,7 @@ export default function ResultViewer() {
                           alt={`Post by ${selectedPost.postInfo.username} - Image ${(selectedPost.currentImageIndex || 0) + 1}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+';
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+'
                           }}
                         />
                         
@@ -559,98 +562,157 @@ export default function ResultViewer() {
                           </>
                         )}
                       </div>
-                      
-                      {/* Image Thumbnails */}
-                      {selectedPost.postInfo.image_files.length > 1 && (
-                        <div className="flex space-x-2 overflow-x-auto pb-2">
-                          {selectedPost.postInfo.image_files.map((imageFile, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setSelectedPost({...selectedPost, currentImageIndex: index})}
-                              className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                                (selectedPost.currentImageIndex || 0) === index 
-                                  ? 'border-blue-500 ring-2 ring-blue-200' 
-                                  : 'border-gray-200 hover:border-gray-300'
-                              }`}
-                            >
-                              <img
-                                src={getImageUrl(imageFile)}
-                                alt={`Thumbnail ${index + 1}`}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM5OWEzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5OL0E8L3RleHQ+PC9zdmc+';
-                                }}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Right Column - Scores */}
-                <div className="space-y-4">
-                  {/* Post ID */}
-                  <div>
+                {/* Right Column - Content (8/12) */}
+                <div className="lg:col-span-8 space-y-4">
+                  {/* Post ID and Rank */}
+                  <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-500">Post ID: {selectedPost.result.post_id}</span>
+                    <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                      Rank #{selectedPost.rank + 1}
+                    </span>
                   </div>
 
-                  {/* All Scores */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">Scores</h3>
-                    <div className="space-y-2">
-                      {Object.entries(selectedPost.result).map(([key, value]) => {
-                        if (key === 'post_id' || key === 'username' || key === 'likes' || key === 'comments' || key === 'followers') return null;
-                        return (
-                          <div key={key} className="flex justify-between items-center py-1">
-                            <span className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
-                            <span className="font-mono text-sm font-semibold text-gray-900 bg-white px-2 py-1 rounded">
-                              {formatScore(value)}
-                            </span>
-                          </div>
-                        );
-                      })}
+                  {/* Image Thumbnails */}
+                  {selectedPost.postInfo && selectedPost.postInfo.image_files.length > 1 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex space-x-2 overflow-x-auto pb-2">
+                        {selectedPost.postInfo.image_files.map((imageFile, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedPost({...selectedPost, currentImageIndex: index})}
+                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                              (selectedPost.currentImageIndex || 0) === index 
+                                ? 'border-blue-500 ring-2 ring-blue-200' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <img
+                              src={getImageUrl(imageFile)}
+                              alt={`Thumbnail ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YzZjRmNiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiM5OWEzYWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5OL0E8L3RleHQ+PC9zdmc+'
+                              }}
+                            />
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Engagement Stats */}
+                  {selectedPost.metadata && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <span className="text-sm text-gray-600">Likes</span>
+                          <p className="text-lg font-semibold text-gray-900">
+                            ❤️ {selectedPost.metadata.likes?.toLocaleString() || '0'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Comments</span>
+                          <p className="text-lg font-semibold text-gray-900">
+                            💬 {selectedPost.metadata.comments?.toLocaleString() || '0'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Followers</span>
+                          <p className="text-lg font-semibold text-gray-900">
+                            👥 {selectedPost.result.followers?.toLocaleString() || '0'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Caption */}
+                  {selectedPost.metadata?.caption && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h3 className="font-semibold text-gray-900 mb-2">Caption</h3>
+                      <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                        {selectedPost.metadata.caption}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Full Width Section - Engagement Stats */}
-              {selectedPost.metadata && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <span className="text-sm text-gray-600">Likes</span>
-                      <p className="text-lg font-semibold text-gray-900">
-                        ❤️ {selectedPost.metadata.likes?.toLocaleString() || '0'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Comments</span>
-                      <p className="text-lg font-semibold text-gray-900">
-                        💬 {selectedPost.metadata.comments?.toLocaleString() || '0'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Followers</span>
-                      <p className="text-lg font-semibold text-gray-900">
-                        👥 {selectedPost.result.followers?.toLocaleString() || '0'}
-                      </p>
-                    </div>
+              {/* All Scores - Full Width, 5 Columns */}
+              <div className="bg-gray-50 rounded-lg p-4 w-full">
+                <h3 className="font-semibold text-gray-900 mb-3">Scores</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-0 divide-x divide-gray-400">
+                  {/* Column 1 */}
+                  <div className="space-y-2 px-4 first:pl-0 last:pr-0">
+                    {['engagement_rate', 'log_engagement'].map((key) => (
+                      selectedPost.result[key] && (
+                        <div key={key} className="flex justify-between items-center py-1">
+                          <span className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-mono text-sm font-semibold text-gray-900 bg-white px-2 py-1 rounded">
+                            {formatScore(selectedPost.result[key])}
+                          </span>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                  {/* Column 2 */}
+                  <div className="space-y-2 px-4 first:pl-0 last:pr-0">
+                    {['image_caption_similarity', 'image_brand_similarity'].map((key) => (
+                      selectedPost.result[key] && (
+                        <div key={key} className="flex justify-between items-center py-1">
+                          <span className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-mono text-sm font-semibold text-gray-900 bg-white px-2 py-1 rounded">
+                            {formatScore(selectedPost.result[key])}
+                          </span>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                  {/* Column 3 */}
+                  <div className="space-y-2 px-4 first:pl-0 last:pr-0">
+                    {['caption_brand_similarity', 'direct_combined_similarity'].map((key) => (
+                      selectedPost.result[key] && (
+                        <div key={key} className="flex justify-between items-center py-1">
+                          <span className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-mono text-sm font-semibold text-gray-900 bg-white px-2 py-1 rounded">
+                            {formatScore(selectedPost.result[key])}
+                          </span>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                  {/* Column 4 */}
+                  <div className="space-y-2 px-4 first:pl-0 last:pr-0">
+                    {['coherence_weighted_similarity', 'normalized_engagement'].map((key) => (
+                      selectedPost.result[key] && (
+                        <div key={key} className="flex justify-between items-center py-1">
+                          <span className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-mono text-sm font-semibold text-gray-900 bg-white px-2 py-1 rounded">
+                            {formatScore(selectedPost.result[key])}
+                          </span>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                  {/* Column 5 */}
+                  <div className="space-y-2 px-4 first:pl-0 last:pr-0">
+                    {['final_coherence_score', 'final_direct_score'].map((key) => (
+                      selectedPost.result[key] && (
+                        <div key={key} className="flex justify-between items-center py-1">
+                          <span className="text-sm text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                          <span className="font-mono text-sm font-semibold text-gray-900 bg-white px-2 py-1 rounded">
+                            {formatScore(selectedPost.result[key])}
+                          </span>
+                        </div>
+                      )
+                    ))}
                   </div>
                 </div>
-              )}
-
-              {/* Full Width Section - Caption */}
-              {selectedPost.metadata?.caption && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Caption</h3>
-                  <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                    {selectedPost.metadata.caption}
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </DialogContent>
