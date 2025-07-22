@@ -723,9 +723,12 @@ export default function ResultViewer() {
                 </div>
 
                 <div className="lg:col-span-9 space-y-4">
-                {/* Post ID and Rank */}
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Post ID: {selectedPost.result.post_id}</span>
+                {/* Post ID, Username and Rank */}
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <div className="text-sm text-gray-500">Post ID: {selectedPost.result.post_id}</div>
+                    <div className="font-bold">@{selectedPost.result.username}</div>
+                  </div>
                   <span className="text-sm font-semibold bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
                     Rank #{selectedPost.rank !== null && selectedPost.rank !== undefined ? selectedPost.rank + 1 : 'N/A'}
                   </span>
